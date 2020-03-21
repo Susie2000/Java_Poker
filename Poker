@@ -1,0 +1,228 @@
+import java.util.Random;
+
+public class hw2 {
+	// 可行的计算公式数
+	static int count = 0;
+	
+	/**
+	 * 生成扑克牌，设置各牌的值
+	 * 随机抽取4张，并输出抽取结果
+	 * 计算是否可得24点
+	 * 输出计算公式
+	 */
+	public static void main(String[] args) {
+		
+		// 生成扑克牌二维数组
+		// 四种花色，每种花色13张牌
+		// 每行分别对应：黑桃、方块、梅花和红桃
+		int poker[][] = new int[4][13];
+		
+		// 给每张牌设值
+		for(int i = 0; i < 4; i++) {
+			for(int j = 0; j < 13; j++) {
+				if(j < 10) {
+					// A-10：1-10
+					poker[i][j] = j+1;
+				}
+				else {
+					// J,Q,K:1,2,3
+					poker[i][j] = j-9;
+				}
+			}
+		}
+		
+		// 随机抽取4张牌并输出抽取结果
+		int[] randomPoker = RandomCard(poker);
+		System.out.println();
+		
+		// 计算是否可得24
+		Operate24(randomPoker);
+		
+		// 输出结果
+		if(count != 0) {
+			System.out.printf("共有%d种计算方法", count);
+		}
+		else {
+			System.out.print("无法计算得到24");
+		}
+	}
+	
+	/**
+	 * 随机抽取4张扑克牌
+	 * 并输出抽取结果
+	 */
+	private static int[] RandomCard(int[][] poker) {
+		// 随机抽取四张牌
+		Random r = new Random();
+		int randomPoker[] = new int[4];
+		System.out.printf("抽到的扑克牌:\n");
+		for(int i = 0; i < 4; i++) 
+		{
+			int SuitNum=r.nextInt(4);
+			int CardNum=r.nextInt(13);
+			randomPoker[i] = poker[SuitNum][CardNum];
+			// 花色
+			String Suit=Suit(SuitNum);
+			// 牌号
+			String Num=Num(CardNum);
+			System.out.printf("%s%s ",Suit,Num);
+			
+			// 若为字母牌，则输出对应数字，以便理解后续计算式
+			if(Num=="A" || Num=="J" || Num=="Q" || Num=="K")
+			{
+				System.out.printf("(对应数字%d)  ",randomPoker[i]);
+			}
+		}
+		return randomPoker;
+	}
+	
+	/**
+	 * 输出花色
+	 */
+	public static String Suit(int num) {
+		String suit="";
+		switch (num) {
+		case 0:
+			suit="黑桃";
+			break;
+		case 1:
+			suit="红桃";
+			break;
+		case 2:
+			suit="方块";
+			break;
+		case 3:
+			suit="梅花";
+			break;
+		default:
+			break;
+		}
+		return suit;
+	}
+	
+	/**
+	 * 输出卡号
+	 */
+	public static String Num(int CNum) {
+		String num;
+		switch (CNum) {
+		case 0:
+			num="A";
+			break;
+		case 10:
+			num="J";
+			break;
+		case 11:
+			num="Q";
+			break;
+		case 12:
+			num="K";
+			break;
+		default:
+			num=Integer.toString(CNum+1);
+		}
+		return num;
+	}
+	
+	/**
+	 * 计算是否可得24
+	 */
+	public static void Operate24(int[] poker){
+		// 四个数字中间有三个运算符，因此用三重循环遍历
+		// 直接传送运算符不太方便，故用数字代表计算符
+		// 其中0表示+，1表示-，2表示x，3表示÷
+		for(int i=0;i<4;i++){
+			for(int j=0;j<4;j++){
+				for(int k=0;k<4;k++){
+					Operate(poker,i,j,k);
+				}
+			}
+		}
+	}
+	/**
+	 * 考虑计算式的各种情况
+	 */
+	public static void Operate(int[] poker, int op1, int op2, int op3) {
+		int num1 = poker[0];
+		int num2 = poker[1];
+		int num3 = poker[2];
+		int num4 = poker[3];
+		// 根据运算顺序，得到四个操作数的5种运算模式
+		// [(A?B)?C]?D
+		if(cal(cal(cal(num1,num2,op1),num3,op2),num4,op3)==24)
+		{
+			System.out.println("[("+num1+Symbol(op1)+num2+")"+Symbol(op2)+num3+"]"+Symbol(op3)+num4);
+			count++;
+		}
+		// [A?(B?C)]?D
+		else if(cal(cal(num1,cal(num2,num3,op2),op1),num4,op3)==24)
+		{
+			System.out.println("["+num1+Symbol(op1)+"("+num2+Symbol(op2)+num3+")]"+Symbol(op3)+num4);
+			count++;
+		}
+		// (A?B)?(C?D)
+		else if(cal(cal(num1,num2,op1),cal(num3,num4,op3),op2)==24)
+		{
+			System.out.println("("+num1+Symbol(op1)+num2+")"+Symbol(op2)+"("+num3+Symbol(op3)+num4+")");
+			count++;
+		}
+		// A?[B?(C?D)]
+		else if(cal(num1,cal(num2,cal(num3,num4,op3),op2),op1)==24)
+		{
+			System.out.println(num1+Symbol(op1)+"["+num2+Symbol(op2)+"("+num3+Symbol(op3)+num4+")]");
+			count++;
+		}
+		// A?[(B?C)?D)]
+		else if(cal(num1,cal(cal(num2,num3,op2),num4,op3),op1)==24)
+		{
+			System.out.println(num1+Symbol(op1)+"[("+num2+Symbol(op2)+num3+")"+Symbol(op3)+num4+"]");
+			count++;
+		}
+	}
+	/**
+	 * 局部计算
+	 */
+	public static double cal(double num1,double num2,int num){
+		double sum=0.0;
+		switch(num) {
+		case 0:
+			sum = num1 + num2;
+			break;
+		case 1:
+			sum = num1 - num2;
+			break;
+		case 2:
+			sum = num1 * num2;
+			break;
+		case 3:
+			sum = num1 / num2;
+			break;
+		default:
+			break;
+		}
+		return sum;
+	}
+	/**
+	 * 将代表计算符号的数字转换成字符
+	 */
+	public static String Symbol(int symbolNum){
+		String symbol = "";
+		switch (symbolNum) {
+		case 0:
+			symbol="+";
+			break;
+		case 1:
+			symbol="-";
+			break;
+		case 2:
+			symbol="x";
+			break;
+		case 3:
+			symbol="÷";
+			break;
+		default:
+			break;
+		}
+		return symbol;
+	}
+}
